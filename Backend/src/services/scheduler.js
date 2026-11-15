@@ -1,5 +1,7 @@
 const cron = require("node-cron");
 const taskModel = require("../models/task.model");
+const userModel = require("../models/user.model");
+const { sendReminderEmail } = require("./email.service");
 
 function startScheduler() {
   // "* * * * *" means: run every minute
@@ -16,6 +18,17 @@ function startScheduler() {
 
       for (const task of dueTasks) {
         console.log(`REMINDER: "${task.title}" is due now`);
+        // Find the owner and email them (if they enabled email reminders)
+        try {
+          const user = await userModel.findById(task.userId);
+
+          if (user && user.emailReminders) {
+            await sendReminderEmail(user.email, user.name, task);
+            console.log(`Email sent to ${user.email}`);
+          }
+        } catch (mailError) {
+          console.error("Email failed:", mailError.message);
+        }
 
         if (task.repeat === "daily" || task.repeat === "weekly") {
           // Move to the next date

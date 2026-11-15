@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     emailReminders: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   { timestamps: true },

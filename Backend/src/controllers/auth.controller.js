@@ -100,8 +100,45 @@ async function logoutUser(req, res) {
 }
 
 
+
+// Get the logged-in user's info
+async function getMe(req, res) {
+  try {
+    const user = await userModel.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+// Update settings (theme and emailReminders only)
+async function updateSettings(req, res) {
+  try {
+    const updates = {};
+
+    if (req.body.theme !== undefined) updates.theme = req.body.theme;
+    if (req.body.emailReminders !== undefined)
+      updates.emailReminders = req.body.emailReminders;
+
+    const user = await userModel
+      .findByIdAndUpdate(req.user.id, updates, {
+        new: true,
+        runValidators: true
+      })
+      .select("-password");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
-  logoutUser
+  logoutUser,
+  getMe,
+  updateSettings
 };
